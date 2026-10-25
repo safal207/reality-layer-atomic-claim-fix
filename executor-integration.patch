@@ -1,0 +1,14 @@
+--- a/src/executor.js
++++ b/src/executor.js
+@@
+   if (actionIR) {
+-    const existing=ledger.get(actionIR.id);
+-    if(existing){
+-      const error=new Error(`Action ${actionIR.id} already exists with outcome ${existing.status}; refusing redispatch`);
+-      error.code='ACTION_ALREADY_RECORDED';error.action=existing;throw error;
+-    }
+-    ledger.start(actionIR, device);
++    // A committed SQLite claim is the ONLY permission to cross the adapter boundary.
++    // Duplicate IDs and changed effect parameters throw before dispatch.
++    ledger.reserveIfAbsent(actionIR, device);
+   }
