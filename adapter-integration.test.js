@@ -29,7 +29,7 @@ test('50 competing executor workers dispatch the mock adapter once',()=>{
   const statuses=Array.from({length:50},(_,i)=>fs.readFileSync(path.join(root,`out.${i+1}`),'utf8'));
   assert.equal(statuses.filter(x=>x==='ADMITTED').length,1,JSON.stringify(statuses));
   assert.equal(statuses.filter(x=>x==='ACTION_ALREADY_RECORDED').length,49,JSON.stringify(statuses));
-  assert.equal(fs.readFileSync(effects,'utf8').trim().split('\\n').length,1);
+  assert.equal(fs.readFileSync(effects,'utf8').trim().split(String.fromCharCode(10)).length,1);
 });
 test('SIGKILL after mock dispatch is recovered as UNKNOWN and retry does not redispatch',()=>{
   const root=dir(),script=workerScript(root),effects=path.join(root,'effects.log');
