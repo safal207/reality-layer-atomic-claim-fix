@@ -5,9 +5,7 @@ const path = require('node:path');
 const crypto = require('node:crypto');
 const { DatabaseSync } = require('node:sqlite');
 const ROOT = path.join(__dirname, '..');
-const DIR = process.env.REALITY_LEDGER_DIR || path.join(ROOT, 'data');
-const DBFILE = path.join(DIR, 'action-ledger.sqlite');
-const LEGACY = path.join(DIR, 'action-ledger.json');
+function ledgerPaths() { const dir=process.env.REALITY_LEDGER_DIR || path.join(ROOT, 'data'); return {dir, dbfile:path.join(dir,'action-ledger.sqlite'), legacy:path.join(dir,'action-ledger.json')}; }
 const STATES = new Set(['STARTED','SUCCEEDED','FAILED','UNKNOWN']);
 const clone = v => v === undefined ? undefined : JSON.parse(JSON.stringify(v));
 function fail(code, message, action) { const e = new Error(message); e.code = code; if(action) e.action=action; throw e; }
@@ -24,9 +22,10 @@ function canonical(v) {
 function request(ir,device) { return {target:ir.target||{}, capability:ir.capability||{}, operation:ir.operation||null,input:ir.input||{},compatibility:ir.compatibility||{},device_id:device?.id||null,adapter_id:device?.adapter_id||null}; }
 function fingerprint(ir,device) { return 'sha256:canonical-json-v1:'+crypto.createHash('sha256').update(canonical(request(ir,device))).digest('hex'); }
 function db() {
-  fs.mkdirSync(DIR,{recursive:true});
-  if(fs.existsSync(LEGACY) && !fs.existsSync(DBFILE)) fail('ACTION_LEDGER_MIGRATION_REQUIRED','Legacy ledger present: migrate before starting');
-  const d=new DatabaseSync(DBFILE); d.exec('PRAGMA busy_timeout=30000; PRAGMA journal_mode=WAL; PRAGMA synchronous=FULL;');
+  const {dir,dbfile,legacy}=ledgerPaths();
+  fs.mkdirSync(dir,{recursive:true});
+  if(fs.existsSync(legacy) && !fs.existsSync(dbfile)) fail('ACTION_LEDGER_MIGRATION_REQUIRED','Legacy ledger present: migrate before starting');
+  const d=new DatabaseSync(dbfile); d.exec('PRAGMA busy_timeout=30000; PRAGMA journal_mode=WAL; PRAGMA synchronous=FULL;');
   d.exec(`CREATE TABLE IF NOT EXISTS actions (action_id TEXT PRIMARY KEY, fingerprint TEXT NOT NULL, status TEXT NOT NULL, record_json TEXT NOT NULL);
           CREATE TABLE IF NOT EXISTS metadata (key TEXT PRIMARY KEY, value TEXT NOT NULL);`);
   return d;
