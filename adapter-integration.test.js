@@ -25,11 +25,11 @@ try {
 test('50 competing executor workers dispatch the mock adapter once',()=>{
   const root=dir(),script=workerScript(root),effects=path.join(root,'effects.log');
   const shell=`for i in $(seq 1 50); do REALITY_LEDGER_DIR='${root}' EFFECT_LOG='${effects}' node '${script}' > '${root}/out.'$i 2> '${root}/err.'$i & done; wait`;
-  const r=spawnSync('bash',['-c',shell],{timeout:120000});assert.equal(r.status,0);
+  const r=spawnSync('bash',['-c',shell],{timeout:120000});assert.equal(r.status,0,r.stderr.toString());
   const statuses=Array.from({length:50},(_,i)=>fs.readFileSync(path.join(root,`out.${i+1}`),'utf8'));
   assert.equal(statuses.filter(x=>x==='ADMITTED').length,1,JSON.stringify(statuses));
   assert.equal(statuses.filter(x=>x==='ACTION_ALREADY_RECORDED').length,49,JSON.stringify(statuses));
-  assert.equal(fs.readFileSync(effects,'utf8').trim().split(String.fromCharCode(10)).length,1);
+  assert.deepEqual(fs.readFileSync(effects,'utf8').trim().split(String.fromCharCode(10)),['dispatch']);
 });
 test('SIGKILL after mock dispatch is recovered as UNKNOWN and retry does not redispatch',()=>{
   const root=dir(),script=workerScript(root),effects=path.join(root,'effects.log');
