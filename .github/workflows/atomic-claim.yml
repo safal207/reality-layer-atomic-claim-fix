@@ -15,5 +15,5 @@ jobs:
           node-version: '22'
       - name: Runtime version
         run: node --version
-      - name: Atomic ledger tests
-        run: node --test atomic-ledger.test.js
+      - name: Atomic claim and adapter integration tests
+        run: node --test atomic-ledger.test.js adapter-integration.test.js
