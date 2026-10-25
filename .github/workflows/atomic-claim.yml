@@ -17,4 +17,4 @@ jobs:
       - name: Runtime version
         run: node --version
       - name: Atomic claim and adapter integration tests
-        run: node --test atomic-ledger.test.js adapter-integration.test.js
+        run: node --test atomic-ledger.test.js adapter-integration.test.js pinned-executor.test.js
